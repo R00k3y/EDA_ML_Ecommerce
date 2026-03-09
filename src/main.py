@@ -16,14 +16,17 @@ def main():
     X, Y, test_size=0.2, random_state=42
     )
 
-    model1 = models.logistic(X_train, Y_train)
-    models.test_and_Evaluate(model1, X_test, Y_test)
+    log_regression = models.logistic(X_train, Y_train)
+    models.test_and_Evaluate(log_regression, X_test, Y_test)
 
-    model2 = models.grad_boost(X_train, Y_train)
-    models.test_and_Evaluate(model2, X_test, Y_test)
+    grad_boost = models.grad_boost(X_train, Y_train)
+    models.test_and_Evaluate(grad_boost, X_test, Y_test)
 
-    model3 = models.forrest(X_train, Y_train)
-    models.test_and_Evaluate(model3, X_test, Y_test)
+    random_forrest = models.forrest(X_train, Y_train)
+    models.test_and_Evaluate(random_forrest, X_test, Y_test)
 
 if __name__ == "__main__":
     main()
+    
+    # The function below is to use a trained model to predict new data
+    # predict_new(trained model, new data)

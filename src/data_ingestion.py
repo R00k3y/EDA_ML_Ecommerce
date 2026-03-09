@@ -27,7 +27,7 @@ def clean_data(df):
     df['CustomerType']= df['CustomerType'].replace({'New_Visitor': 1, 'Returning_Visitor': 2, 'Unknown':3, 'Other': 4})
     df['CustomerType'] = df['CustomerType'].astype(float )
     df[['ProductPageTime', 'BounceRate']] = df[['ProductPageTime', 'BounceRate']].abs()
-    df = df.drop(columns=['BounceRate'])
+    df = df.drop(columns=['BounceRate', 'PageValue'])
     return df
 
 
@@ -51,7 +51,7 @@ def transform_data(df):
 
 # some data transformation and preparing data for Pipeline
 categorical_var = ['SpecialDayProximity', 'GeographicRegion', 'TrafficSource', 'CustomerType']
-numeric_var = ['ProductPageTime', 'ExitRate', 'PageValue']
+numeric_var = ['ProductPageTime', 'ExitRate']
 
 transformed_data = ColumnTransformer([
     ("categorical", OneHotEncoder(handle_unknown="ignore"), categorical_var),

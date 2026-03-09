@@ -87,15 +87,12 @@ def forrest(x_train,y_train):
 
 # function to test and evaluate a fitted model
 def test_and_Evaluate(model, x_test,y_test):
-    pred = model.predict(x_test)
-
-    accuracy = accuracy_score(y_test, pred)
-    # print('Accuracy score:',accuracy)
-    # print(classification_report(y_test, pred))
-
     best_model = model.best_estimator_
-    print("Best model accuracy:")
-    print(best_model.score(x_test, y_test))
+    prediction = best_model.predict(x_test)
+
+    print("Best Parameters:", model.best_params_)
+    print("Accuracy:", best_model.score(x_test, y_test))
+    print(classification_report(y_test, prediction))
 
 # function to perform predictions with new data using a trained model 
 def predict_new(model,data):
