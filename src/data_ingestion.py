@@ -4,7 +4,8 @@ import sqlite3
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import StandardScaler
-
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.compose import ColumnTransformer
 
 
 # load data 
@@ -26,7 +27,7 @@ def clean_data(df):
     df['CustomerType']= df['CustomerType'].replace({'New_Visitor': 1, 'Returning_Visitor': 2, 'Unknown':3, 'Other': 4})
     df['CustomerType'] = df['CustomerType'].astype(float )
     df[['ProductPageTime', 'BounceRate']] = df[['ProductPageTime', 'BounceRate']].abs()
-    df = df.drop(columns=["PurchaseCompleted", 'BounceRate'])
+    df = df.drop(columns=['BounceRate'])
     return df
 
 
@@ -45,8 +46,14 @@ def transform_data(df):
     df['Time_scaled'] = np.log1p(df['ProductPageTime'])
     df['Time_scaled'] = scale.fit_transform(df[['Time_scaled']])
 
+    return df
 
 
-test = connect_db('data/online_shopping.db','online_shopping')
-test = clean_data(test)
-print(test.dtypes)
+# some data transformation and preparing data for Pipeline
+categorical_var = ['SpecialDayProximity', 'GeographicRegion', 'TrafficSource', 'CustomerType']
+numeric_var = ['ProductPageTime', 'ExitRate', 'PageValue']
+
+transformed_data = ColumnTransformer([
+    ("categorical", OneHotEncoder(handle_unknown="ignore"), categorical_var),
+    ("numerical", "passthrough", numeric_var)
+])

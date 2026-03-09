@@ -1,18 +1,34 @@
 import pandas as pd
 import numpy as np
-from sklearn.model_selection import train_test_split
+
+from data_ingestion import categorical_var, numeric_var, transformed_data
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import OneHotEncoder
-from sklearn.compose import ColumnTransformer
-
+from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import accuracy_score, classification_report
 
 # logistic regression model
 def logistic(x_train,y_train):
-    model = LogisticRegression
-    fitted = model.fit(x_train,y_train)
+    log_pipeline = Pipeline([
+        ("transformed_data", transformed_data),
+        ("model",LogisticRegression(max_iter=10000))
+    ])
+
+    log_params = {
+        "model__C": [0.01, 0.1, 1, 10],
+        "model__solver": ["lbfgs", "liblinear"]
+    }
+
+    log_grid = GridSearchCV(
+        log_pipeline, 
+        log_params,
+        cv = 5, 
+        scoring="accuracy",
+        n_jobs=-1
+    )
+
+    fitted = log_grid.fit(x_train,y_train)
     return fitted
 
 
@@ -20,38 +36,68 @@ def logistic(x_train,y_train):
 # function includes one-hot encoder 
 def grad_boost(x_train, y_train):
 
-    categorical_var = ['SpecialDayProximity', 'GeographicRegion', 'TrafficSource', 'CustomerType']
-    numeric_var = ['ProductPageTime', 'BounceRate', 'ExitRate', 'PageValue']
-
-    preprocess = ColumnTransformer([
-        ("categorical", OneHotEncoder(handle_unknown="ignore"), categorical_var),   # one-hot encoder 
-        ("numerical", "passthrough", numeric_var)
+    grad_pipeline = Pipeline([
+        ("transformed_data", transformed_data),
+        ("grad_boost_model", GradientBoostingClassifier())
     ])
 
-    model = GradientBoostingClassifier()
+    grad_boost_params = {
+        "grad_boost_model__n_estimators": [100, 200],
+        "grad_boost_model__learning_rate": [0.01, 0.1],
+        "grad_boost_model__max_depth": [3, 5]
+    }
 
-    pipeline = Pipeline([
-        ("data_preprocess", preprocess),
-        ("grad_boost_model", model)
-    ])
+    grad_boost_grid = GridSearchCV(
+        grad_pipeline,
+        grad_boost_params,
+        cv = 5, 
+        scoring= "accuracy",
+        n_jobs=-1
+    )
 
-    pipeline.fit(x_train, y_train)
+    fitted = grad_boost_grid.fit(x_train, y_train)
 
-    return pipeline
+    return fitted
 
 # random forrest model 
 def forrest(x_train,y_train):
-    model = RandomForestClassifier(n_estimators=100, random_state=42)
-    return model.fit(x_train, y_train)
+
+    forrest_pipeline = Pipeline([
+        ("transformed_data", transformed_data),
+        ("model", RandomForestClassifier(random_state=42))
+    ])
+
+    forrest_params = {
+        "model__n_estimators": [100, 200],
+        "model__max_depth": [None, 10, 20],
+        "model__min_samples_split": [2, 5]
+    }
+
+    forrest_grid = GridSearchCV(
+        forrest_pipeline,
+        forrest_params,
+        cv =5,
+        scoring="accuracy",
+        n_jobs=-1
+    )
+
+    fitted = forrest_grid.fit(x_train, y_train)
+    return fitted
     
 
 # function to test and evaluate a fitted model
 def test_and_Evaluate(model, x_test,y_test):
     pred = model.predict(x_test)
-    accuracy = accuracy_score(y_test, pred)
-    print('Accuracy score:',accuracy)
-    print(classification_report(y_test, pred))
 
+    accuracy = accuracy_score(y_test, pred)
+    # print('Accuracy score:',accuracy)
+    # print(classification_report(y_test, pred))
+
+    best_model = model.best_estimator_
+    print("Best model accuracy:")
+    print(best_model.score(x_test, y_test))
+
+# function to perform predictions with new data using a trained model 
 def predict_new(model,data):
     predict = model.predict(data)
     return predict
